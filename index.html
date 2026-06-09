@@ -3,260 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TTG Engine — Game Renderer</title>
+  <title>TG Engine</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      background: #000;
-      overflow: hidden;
-      font-family: 'Share Tech Mono', monospace;
-    }
-
-    #canvas {
-      display: block;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    /* ── Top bar ── */
-    #topbar {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, transparent 100%);
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    #logo {
-      font-family: 'Orbitron', sans-serif;
-      font-weight: 900;
-      font-size: 16px;
-      letter-spacing: 4px;
-      background: linear-gradient(90deg, #7c3aed, #06b6d4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-transform: uppercase;
-    }
-
-    #status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 11px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-    }
-
-    #status-dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: #ef4444;
-      box-shadow: 0 0 8px #ef4444;
-      animation: pulse-red 1.5s infinite;
-    }
-
-    #status-dot.connected {
-      background: #22c55e;
-      box-shadow: 0 0 8px #22c55e;
-      animation: pulse-green 1.5s infinite;
-    }
-
-    #status-text { color: #94a3b8; }
-
-    @keyframes pulse-red {
-      0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
-    }
-    @keyframes pulse-green {
-      0%, 100% { opacity: 1; box-shadow: 0 0 8px #22c55e; }
-      50% { opacity: 0.7; box-shadow: 0 0 16px #22c55e; }
-    }
-
-    /* ── HUD bottom bar ── */
+    body { background: #0d0d0d; overflow: hidden; }
+    #canvas { display: block; width: 100vw; height: 100vh; }
     #hud {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      color: #e0e0e0; font: 13px/1 monospace;
+      background: rgba(0,0,0,0.55); padding: 6px 14px; border-radius: 4px;
+      pointer-events: none; white-space: nowrap;
+    }
+    #status {
+      position: fixed; top: 10px; right: 14px;
+      color: #aaa; font: 11px/1 monospace;
       pointer-events: none;
-      z-index: 10;
-      text-align: center;
-    }
-
-    #hud-text {
-      display: inline-block;
-      color: #e2e8f0;
-      font-size: 12px;
-      letter-spacing: 1.5px;
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid rgba(124, 58, 237, 0.4);
-      border-radius: 6px;
-      padding: 8px 20px;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 0 20px rgba(124, 58, 237, 0.2), inset 0 0 20px rgba(124, 58, 237, 0.05);
-      white-space: nowrap;
-    }
-
-    /* ── Corner decorations ── */
-    .corner {
-      position: fixed;
-      width: 20px; height: 20px;
-      pointer-events: none;
-      z-index: 10;
-      opacity: 0.6;
-    }
-    .corner-tl { top: 56px; left: 12px; border-top: 2px solid #7c3aed; border-left: 2px solid #7c3aed; }
-    .corner-tr { top: 56px; right: 12px; border-top: 2px solid #06b6d4; border-right: 2px solid #06b6d4; }
-    .corner-bl { bottom: 12px; left: 12px; border-bottom: 2px solid #7c3aed; border-left: 2px solid #7c3aed; }
-    .corner-br { bottom: 12px; right: 12px; border-bottom: 2px solid #06b6d4; border-right: 2px solid #06b6d4; }
-
-    /* ── Scanline overlay ── */
-    #scanlines {
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 0, 0, 0.03) 2px,
-        rgba(0, 0, 0, 0.03) 4px
-      );
-      pointer-events: none;
-      z-index: 5;
-    }
-
-    /* ── Waiting screen ── */
-    #waiting {
-      position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-      pointer-events: none;
-      opacity: 1;
-      transition: opacity 0.8s ease;
-    }
-
-    #waiting.hidden { opacity: 0; }
-
-    #waiting-title {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 42px;
-      font-weight: 900;
-      letter-spacing: 8px;
-      text-transform: uppercase;
-      background: linear-gradient(135deg, #7c3aed 0%, #06b6d4 50%, #7c3aed 100%);
-      background-size: 200% 200%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      animation: shimmer 3s linear infinite;
-      margin-bottom: 12px;
-    }
-
-    #waiting-sub {
-      font-size: 11px;
-      letter-spacing: 4px;
-      color: #475569;
-      text-transform: uppercase;
-      margin-bottom: 40px;
-    }
-
-    #waiting-spinner {
-      width: 48px; height: 48px;
-      border: 2px solid rgba(124, 58, 237, 0.2);
-      border-top-color: #7c3aed;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 24px;
-    }
-
-    #waiting-hint {
-      font-size: 10px;
-      letter-spacing: 2px;
-      color: #334155;
-      text-transform: uppercase;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 0% 50%; }
-      100% { background-position: 200% 50%; }
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-
-  <!-- Scanlines -->
-  <div id="scanlines"></div>
-
-  <!-- Corner decorations -->
-  <div class="corner corner-tl"></div>
-  <div class="corner corner-tr"></div>
-  <div class="corner corner-bl"></div>
-  <div class="corner corner-br"></div>
-
-  <!-- Top bar -->
-  <div id="topbar">
-    <div id="logo">TTG Engine</div>
-    <div id="status">
-      <div id="status-dot"></div>
-      <span id="status-text">Connecting…</span>
-    </div>
-  </div>
-
-  <!-- Waiting screen -->
-  <div id="waiting">
-    <div id="waiting-title">TTG Engine</div>
-    <div id="waiting-sub">Text To Game · Real-Time Renderer</div>
-    <div id="waiting-spinner"></div>
-    <div id="waiting-hint">Waiting for game signal…</div>
-  </div>
-
-  <!-- Game canvas -->
   <canvas id="canvas"></canvas>
-
-  <!-- HUD -->
-  <div id="hud">
-    <div id="hud-text">Connecting…</div>
-  </div>
-
+  <div id="hud">Connecting…</div>
+  <div id="status">🔴 Disconnected</div>
   <script type="module" src="client.js"></script>
-  <script>
-    // Update status dot + text from client.js events
-    const dot  = document.getElementById('status-dot');
-    const text = document.getElementById('status-text');
-    const hud  = document.getElementById('hud-text');
-    const wait = document.getElementById('waiting');
-
-    window.__setConnected = (connected) => {
-      if (connected) {
-        dot.classList.add('connected');
-        text.textContent = 'Connected';
-      } else {
-        dot.classList.remove('connected');
-        text.textContent = 'Disconnected';
-      }
-    };
-
-    window.__setHud = (msg) => {
-      hud.textContent = msg;
-      // Hide waiting screen once game starts
-      if (msg && msg !== 'Connecting…' && !msg.includes('MENU')) {
-        wait.classList.add('hidden');
-      }
-    };
-  </script>
 </body>
 </html>
