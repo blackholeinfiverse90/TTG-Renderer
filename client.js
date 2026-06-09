@@ -122,7 +122,8 @@ function updateCamera(payload) {
 
 function updateUI(payload) {
     if (payload.title) document.title = payload.title;
-    const el = document.getElementById('hud');
+    if (window.__setHud) window.__setHud(payload.title || '');
+    const el = document.getElementById('hud-text');
     if (el && payload.title) el.textContent = payload.title;
 }
 
@@ -161,13 +162,13 @@ function connect() {
 
     ws.onopen = () => {
         console.log('[WS] connected');
-        document.getElementById('status').textContent = '🟢 Connected';
+        if (window.__setConnected) window.__setConnected(true);
         clearTimeout(reconnectTimer);
     };
 
     ws.onclose = () => {
         console.log('[WS] disconnected — retrying in 2s');
-        document.getElementById('status').textContent = '🔴 Disconnected';
+        if (window.__setConnected) window.__setConnected(false);
         reconnectTimer = setTimeout(connect, 2000);
     };
 
