@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: ttg-engine
+    env: python
+    buildCommand: pip install -r requirements.txt && npm install
+    startCommand: bash start.sh
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: RUDRA_URL
+        value: https://your-rudra-backend.onrender.com
+      - key: JWT_SECRET
+        value: JWT_SECRET_123456789
+      - key: ENGINE_SHARED_SECRET
+        value: ENGINE_SHARED_SECRET_123
+    autoDeploy: true
