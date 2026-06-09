@@ -23,6 +23,7 @@ app.add_middleware(
 )
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
+os.makedirs(os.path.join(_DIR, "recordings"), exist_ok=True)
 app.mount("/recordings", StaticFiles(directory=os.path.join(_DIR, "recordings")), name="recordings")
 
 @app.get("/")
